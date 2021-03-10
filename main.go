@@ -3,16 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 func main() {
 
 	retry := flag.Bool("retry", false, "Reconnect after disconnection (client only)")
+	count := flag.Int("n", 1, "How many connections to open")
 
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [server-url] \n", os.Args[0])
@@ -39,11 +42,19 @@ func main() {
 			}
 			return handleConnection(conn)
 		}
-		if *retry {
-			withRetry(connect)
-		} else {
-			connect()
+		wg := sync.WaitGroup{}
+		for i := 0; i < *count; i++ {
+			wg.Add(1)
+			go func() {
+				if *retry {
+					withRetry(connect)
+				} else {
+					connect()
+				}
+				wg.Done()
+			}()
 		}
+		wg.Wait()
 
 	} else {
 		//server mode
