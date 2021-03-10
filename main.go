@@ -12,10 +12,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var verbose bool
+
 func main() {
 
 	retry := flag.Bool("retry", false, "Reconnect after disconnection (client only)")
 	count := flag.Int("n", 1, "How many connections to open")
+	v := flag.Bool("v", false, "if output should be printed")
 
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [options] [server-url] \n", os.Args[0])
@@ -28,6 +31,8 @@ func main() {
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.LUTC)
 	log.SetOutput(os.Stdout)
+
+	verbose = *v
 
 	if flag.Arg(0) != "" {
 		// client mode
@@ -93,13 +98,17 @@ func handleConnection(conn *websocket.Conn) error {
 			log.Println(err)
 			return err
 		}
-		log.Printf("-> Sent '%s' to %s\n", msg, conn.RemoteAddr().String())
+		if verbose {
+			log.Printf("-> Sent '%s' to %s\n", msg, conn.RemoteAddr().String())
+		}
 		_, p, err := conn.ReadMessage()
 		if err != nil {
 			log.Println(err)
 			return err
 		}
-		log.Printf("<- Received '%s' from %s\n", p, conn.RemoteAddr().String())
+		if verbose {
+			log.Printf("<- Received '%s' from %s\n", p, conn.RemoteAddr().String())
+		}
 		time.Sleep(time.Second)
 	}
 
