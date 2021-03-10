@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -58,6 +59,7 @@ func main() {
 				}
 				wg.Done()
 			}()
+			time.Sleep(time.Millisecond)
 		}
 		wg.Wait()
 
@@ -118,7 +120,7 @@ func withRetry(f func() error) {
 	err := f()
 
 	if err != nil {
-		time.Sleep(time.Second)
+		time.Sleep(time.Second + (time.Millisecond * time.Duration(rand.Float64()*1000)))
 		withRetry(f)
 	}
 }
